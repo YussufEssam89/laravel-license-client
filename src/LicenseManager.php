@@ -84,11 +84,18 @@ class LicenseManager
      * Enforce license — abort with 403 if not active.
      * Use this inside service classes, providers, and critical controllers.
      *
+     * Skips enforcement if no secret is configured (development/unconfigured).
+     *
      * Example:
      *   app(LicenseManager::class)->enforce();
      */
     public function enforce(): void
     {
+        // Skip if no license secret configured (development/unconfigured)
+        if (empty(config('license.secret'))) {
+            return;
+        }
+
         abort_if(! $this->isActive(), 403, 'License is not active.');
     }
 
