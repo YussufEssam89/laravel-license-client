@@ -1,0 +1,32 @@
+{
+    "name": "jotech/license-client",
+    "description": "Jo-Tech License Client — reusable Laravel package for license verification against the Jo-Tech licensing server.",
+    "type": "library",
+    "license": "proprietary",
+    "authors": [
+        {
+            "name": "Jo-Tech",
+            "email": "info@jo-tech.org"
+        }
+    ],
+    "require": {
+        "php": "^8.1",
+        "illuminate/support": "^10.0|^11.0",
+        "illuminate/http": "^10.0|^11.0",
+        "illuminate/cache": "^10.0|^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "JoTech\\License\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "JoTech\\License\\LicenseServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
