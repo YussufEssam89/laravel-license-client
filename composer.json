@@ -1,5 +1,5 @@
 {
-    "name": "jotech/laravel-license-client",
+    "name": "jotech/license-client",
     "description": "Jo-Tech License Client — reusable Laravel package for license verification against the Jo-Tech licensing server.",
     "type": "library",
     "license": "proprietary",
