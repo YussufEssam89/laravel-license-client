@@ -9,11 +9,51 @@ use Illuminate\Support\Facades\Log;
 class LicenseManager
 {
     /**
+     * Path to the lifetime license file.
+     * This file is written once when the server confirms lifetime status,
+     * and is never removed — the app will never check the license again.
+     */
+    protected function lifetimeFilePath(): string
+    {
+        return storage_path('framework/license_lifetime');
+    }
+
+    /**
+     * Check if this installation has a permanent lifetime license.
+     */
+    public function isLifetime(): bool
+    {
+        return file_exists($this->lifetimeFilePath());
+    }
+
+    /**
+     * Mark this installation as lifetime-licensed.
+     * Writes a permanent file to storage — no cache involved.
+     */
+    protected function markAsLifetime(): void
+    {
+        $dir = dirname($this->lifetimeFilePath());
+        if (! is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+
+        file_put_contents($this->lifetimeFilePath(), json_encode([
+            'activated_at' => now()->toIso8601String(),
+            'domain' => request()->getHost(),
+        ]));
+    }
+
+    /**
      * Verify license by calling the license server directly.
      * This bypasses the cache and always makes an API call.
      */
     public function verify(): string
     {
+        // If lifetime file exists, skip API call entirely
+        if ($this->isLifetime()) {
+            return 'ACTIVE';
+        }
+
         try {
             $response = Http::timeout(10)
                 ->retry(2, 500)
@@ -23,7 +63,14 @@ class LicenseManager
                 ]);
 
             if ($response->successful()) {
-                return $response->json('status', 'INVALID');
+                $status = $response->json('status', 'INVALID');
+
+                // If server says lifetime, store it permanently
+                if ($status === 'ACTIVE' && $response->json('lifetime') === true) {
+                    $this->markAsLifetime();
+                }
+
+                return $status;
             }
 
             // If server returned 403, the secret is wrong
@@ -51,6 +98,11 @@ class LicenseManager
      */
     public function status(): string
     {
+        // Lifetime licenses are always active — no cache, no API
+        if ($this->isLifetime()) {
+            return 'ACTIVE';
+        }
+
         $cacheHours = config('license.cache_hours', 24);
         if ($cacheHours <= 0) {
             return $this->verify();
@@ -84,12 +136,18 @@ class LicenseManager
      * Use this inside service classes, providers, and critical controllers.
      *
      * LICENSE_SECRET is required — missing secret is treated as INVALID.
+     * Lifetime licenses bypass all checks.
      *
      * Example:
      *   app(LicenseManager::class)->enforce();
      */
     public function enforce(): void
     {
+        // Lifetime license — always active, skip everything
+        if ($this->isLifetime()) {
+            return;
+        }
+
         // No secret configured — treat as invalid (secret is required)
         if (empty(config('license.secret'))) {
             $this->block('INVALID');
