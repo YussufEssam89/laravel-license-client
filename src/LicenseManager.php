@@ -52,7 +52,6 @@ class LicenseManager
     public function status(): string
     {
         $cacheHours = config('license.cache_hours', 24);
-
         if ($cacheHours <= 0) {
             return $this->verify();
         }
@@ -81,7 +80,7 @@ class LicenseManager
     }
 
     /**
-     * Enforce license — abort with 403 if not active.
+     * Enforce license — show suspended view if not active.
      * Use this inside service classes, providers, and critical controllers.
      *
      * Skips enforcement if no secret is configured (development/unconfigured).
@@ -96,7 +95,15 @@ class LicenseManager
             return;
         }
 
-        abort_if(! $this->isActive(), 403, 'License is not active.');
+        if (! $this->isActive()) {
+            $status = $this->status();
+
+            echo response()->view('license::license.suspended', [
+                'status' => $status,
+            ], 403)->send();
+
+            exit;
+        }
     }
 
     /**
