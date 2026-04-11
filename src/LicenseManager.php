@@ -80,39 +80,45 @@ class LicenseManager
     }
 
     /**
-     * Enforce license — abort with 403 if not active.
+     * Enforce license — block the app if license is not active or not configured.
      * Use this inside service classes, providers, and critical controllers.
      *
-     * Skips enforcement if no secret is configured (development/unconfigured).
+     * LICENSE_SECRET is required — missing secret is treated as INVALID.
      *
      * Example:
      *   app(LicenseManager::class)->enforce();
      */
     public function enforce(): void
     {
-        // Skip if no license secret configured (development/unconfigured)
+        // No secret configured — treat as invalid (secret is required)
         if (empty(config('license.secret'))) {
+            $this->block('INVALID');
             return;
         }
 
         if (! $this->isActive()) {
-            $status = $this->status();
-
-            // API requests get a JSON response
-            if (request()->expectsJson()) {
-                response()->json([
-                    'message' => 'LICENSE IS NOT ACTIVE.',
-                    'status'  => $status,
-                ], 403)->send();
-            } else {
-                // Web requests get the styled suspended view
-                response()->view('license::license.suspended', [
-                    'status' => $status,
-                ], 403)->send();
-            }
-
-            exit;
+            $this->block($this->status());
         }
+    }
+
+    /**
+     * Block the application with a 403 response.
+     * Returns JSON for API requests, or the styled suspended view for web requests.
+     */
+    protected function block(string $status): void
+    {
+        if (request()->expectsJson()) {
+            response()->json([
+                'message' => 'LICENSE IS NOT ACTIVE.',
+                'status'  => $status,
+            ], 403)->send();
+        } else {
+            response()->view('license::license.suspended', [
+                'status' => $status,
+            ], 403)->send();
+        }
+
+        exit;
     }
 
     /**
