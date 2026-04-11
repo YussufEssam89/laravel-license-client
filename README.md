@@ -1,20 +1,20 @@
 # Jo-Tech License Client
 
-A reusable Laravel package that verifies your application's license against the Jo-Tech licensing server (`license.jo-tech.org`). Provides automatic enforcement via middleware, cached verification, and service-level protection.
+A reusable Laravel package that verifies your application's license against the Jo-Tech licensing server (`jo-tech.org`). Provides automatic enforcement via middleware, cached verification, and service-level protection.
 
 ## Installation
 
 ### Option A: Private Git Repository (recommended for production)
 
 ```bash
-composer config repositories.jotech-license vcs git@github.com:YussufEssam89/license-client.git
+composer config repositories.jotech-license vcs git@github.com:YussufEssam89/laravel-license-client.git
 composer require jotech/license-client
 ```
 
 ### Option B: Path Repository (local development)
 
 ```bash
-composer config repositories.jotech-license path ../path/to/license-client
+composer config repositories.jotech-license path ../path/to/laravel-license-client
 composer require jotech/license-client
 ```
 
