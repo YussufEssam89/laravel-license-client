@@ -80,7 +80,7 @@ class LicenseManager
     }
 
     /**
-     * Enforce license — show suspended view if not active.
+     * Enforce license — abort with 403 if not active.
      * Use this inside service classes, providers, and critical controllers.
      *
      * Skips enforcement if no secret is configured (development/unconfigured).
@@ -98,9 +98,18 @@ class LicenseManager
         if (! $this->isActive()) {
             $status = $this->status();
 
-            echo response()->view('license::license.suspended', [
-                'status' => $status,
-            ], 403)->send();
+            // API requests get a JSON response
+            if (request()->expectsJson()) {
+                response()->json([
+                    'message' => 'LICENSE IS NOT ACTIVE.',
+                    'status'  => $status,
+                ], 403)->send();
+            } else {
+                // Web requests get the styled suspended view
+                response()->view('license::license.suspended', [
+                    'status' => $status,
+                ], 403)->send();
+            }
 
             exit;
         }
