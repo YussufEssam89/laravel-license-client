@@ -11,7 +11,7 @@ return [
     |
     */
 
-    'server_url' => env('LICENSE_SERVER_URL', 'https://license.jo-tech.org/api/verify-license'),
+    'server_url' => env('LICENSE_SERVER_URL', 'https://jo-tech.org/api/verify-license'),
 
     /*
     |--------------------------------------------------------------------------
